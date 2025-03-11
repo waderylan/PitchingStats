@@ -1,8 +1,9 @@
 import json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from collections import defaultdict, OrderedDict
 import os
+from PIL import Image, ImageDraw, ImageFont
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend access
@@ -185,6 +186,146 @@ class PitchingStats:
             ("Hits on BB", hits_on_bb),
         ]))
 
+
+def generate_game_chart(game_data, output_pdf_path):
+    """Generates a game chart from JSON and saves it as a PDF."""
+
+    # Constants for grid layout
+    rows, cols = 9, 5  # 5 columns, 9 rows
+    cell_width, cell_height = 180, 140  # Adjusted for better readability
+    padding = 20  # Padding around the grid
+
+    # Create a blank white image
+    img_width = cols * cell_width + 2 * padding
+    img_height = rows * cell_height + 2 * padding
+    img = Image.new("RGB", (img_width, img_height), "white")
+    draw = ImageDraw.Draw(img)
+
+    # Load a font for text
+    try:
+        font = ImageFont.truetype("arial.ttf", 16)
+    except IOError:
+        font = ImageFont.load_default()
+
+    # Function to draw at-bats
+    def draw_at_bat(draw, x, y, at_bat):
+        # Draw outer box
+        draw.rectangle([x, y, x + cell_width, y + cell_height], outline="black", width=2)
+
+        # Draw the mini-table for balls/strikes (10 columns x 2 rows)
+        table_x, table_y = x + 10, y + 10
+        box_size = 14  # Smaller boxes for 10 columns
+
+        # Shift table to the right
+        table_x = x + 30  # Moves the entire 10x2 table to the right
+
+        # Shift "B" and "S" slightly up for better alignment
+        draw.text((table_x - 20, table_y - 2), "B", fill="black", font=font)  # Balls (Top row)
+        draw.text((table_x - 20, table_y + box_size - 2), "S", fill="black", font=font)  # Strikes (Bottom row)
+
+        # Draw grid for the mini-table
+        for i in range(2):  # 2 rows (balls, strikes)
+            for j in range(10):  # 10 columns for pitches
+                cell_x = table_x + j * box_size
+                cell_y = table_y + i * box_size
+                draw.rectangle([cell_x, cell_y, cell_x + box_size, cell_y + box_size], outline="black", width=1)
+
+        # Populate pitch sequence into the mini-table (left to right)
+        pitch_types = at_bat.get("pitch_types", [])
+        pitch_outcomes = at_bat.get("pitch_outcomes", [])
+
+        for idx, (pitch, outcome) in enumerate(zip(pitch_types, pitch_outcomes)):
+            if idx >= 10:
+                break  # Only handle up to 10 pitches
+
+            pitch_label = str(pitch)
+
+            # Adjust text placement to center numbers inside boxes
+            box_center_offset = box_size // 2 - 6  # Center adjustment
+
+            if outcome in ["B"]:  # Balls in **Top Row**
+                text_x = table_x + idx * box_size + box_center_offset
+                text_y = table_y + box_center_offset - 2
+                draw.text((text_x, text_y), pitch_label, fill="black", font=font)
+
+            elif outcome in ["S", "K", "F", "P"]:  # Strikes in **Bottom Row**
+                text_x = table_x + idx * box_size + box_center_offset
+                text_y = table_y + box_size + box_center_offset - 2
+                # Define colors for pitch outcomes
+                color_map = {
+                    "S": "green",  # Swing and Miss
+                    "F": "orange",  # Foul Ball
+                    "P": "red",  # In Play
+                }
+
+                # Get color for this outcome (default to black if not specified)
+                text_color = color_map.get(outcome, "black")
+
+                # Draw text with the corresponding color
+                draw.text((text_x, text_y), pitch_label, fill=text_color, font=font)
+
+        # Load a larger font for the at-bat result
+        try:
+            result_font = ImageFont.truetype("arial.ttf", 26)  # Increased font size
+        except IOError:
+            result_font = ImageFont.load_default()
+
+        # Draw the at-bat result in the center of the cell
+        result = at_bat.get("at_bat_outcome", "")
+        result_x = x + cell_width // 2 - 15  # Adjust for better centering
+        result_y = y + cell_height // 2 - 10  # Move slightly higher
+        draw.text((result_x, result_y), result, fill="black", font=result_font)
+
+    # Place at-bats into the 5x9 grid (COLUMN-WISE FILL)
+    at_bat_ids = list(game_data["at_bats"].keys())
+    index = 0
+
+    for j in range(cols):  # Move column-wise first
+        for i in range(rows):  # Fill downward in each column
+            if index < len(at_bat_ids):
+                at_bat_id = at_bat_ids[index]
+                at_bat_data = game_data["at_bats"][at_bat_id]
+                draw_at_bat(draw, padding + j * cell_width, padding + i * cell_height, at_bat_data)
+                index += 1
+
+    # Add a key (legend) in the top-right corner
+    key_x, key_y = img_width - 190, 30  # Position in the top-right
+    key_spacing = 25  # Space between each line
+
+    # Define the legend items (outcome → description + color)
+    legend_items = [
+        ("S", "Swing and Miss", "green"),
+        ("F", "Foul Ball", "orange"),
+        ("P", "In Play", "red"),
+    ]
+
+    # Draw a title for the key
+    draw.text((key_x, key_y - 25), "Key:", fill="black", font=font)
+
+    # Draw each legend item
+    for i, (symbol, desc, color) in enumerate(legend_items):
+        y_pos = key_y + i * key_spacing
+
+        # Draw colored box
+        draw.rectangle([key_x, y_pos, key_x + 15, y_pos + 15], fill=color, outline="black")
+
+        # Draw text next to it
+        draw.text((key_x + 20, y_pos), f"{symbol}: {desc}", fill="black", font=font)
+
+    # Save as PDF
+    img.convert("RGB").save(output_pdf_path)
+    return output_pdf_path
+
+@app.route("/generate-game-chart", methods=["POST"])
+def generate_game_chart_route():
+    """Endpoint to generate a game chart and return as a PDF."""
+    try:
+        game_data = request.json
+        output_pdf_path = "game_chart.pdf"
+        generate_game_chart(game_data, output_pdf_path)
+        return send_file(output_pdf_path, as_attachment=True, mimetype="application/pdf")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/compute-stats', methods=['POST'])
 def compute_stats():
