@@ -30,6 +30,7 @@ class PitchingStats:
         total_walks = 0
         total_hbp = 0
         total_hits = 0
+        total_balls_in_play = 0
         fastball_count = 0
         fastball_k_count = 0
         changeup_count = 0
@@ -75,6 +76,9 @@ class PitchingStats:
                 total_first_pitch_fastballs += 1
             if outcomes[0] != "B" and pitches[0] == 1:
                 total_first_pitch_fastball_strikes += 1
+
+            if result in ("1B", "2B", "3B", "HR", "GO", "FO", "LO"):
+                total_balls_in_play += 1
 
             balls = 0
             strikes = 0
@@ -143,15 +147,19 @@ class PitchingStats:
         first_pitch_fastball_percentage = (total_first_pitch_fastballs / total_at_bats) * 100 if total_at_bats > 0 else 0
         first_pitch_fastball_strike_percentage = (total_first_pitch_fastball_strikes / total_first_pitch_fastballs) * 100 if total_first_pitch_fastballs > 0 else 0
         whiff_percentage = (total_swing_and_misses / total_swings) * 100 if total_swings > 0 else 0
+        batting_avg = (total_hits / total_at_bats) if total_at_bats > 0 else 0
+        babip = (total_hits / total_balls_in_play) if total_balls_in_play > 0 else 0
 
         # Store values in ordered dictionary
         self.stats.update(OrderedDict([
             ("# Pitches Thrown", total_pitches),
-            ("# ABs", total_at_bats),
+            ("# Plate Appearances", total_at_bats),
             ("K", total_strikeouts),
             ("BB", total_walks),
             ("HBP", total_hbp),
             ("H", total_hits),
+            ("Batting Average", round(batting_avg,3)),
+            ("BABIP", round(babip, 3)),
             ("% Strikes", round(strike_percentage, 2)),
             ("% First Pitch Strikes", round(first_pitch_strike_percentage, 2)),
             ("% First Pitch Fastballs", round(first_pitch_fastball_percentage, 2)),
