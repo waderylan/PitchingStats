@@ -3,6 +3,6 @@ uvicorn
 flask~=2.2.5
 flask_cors
 
-pillow~=8.3.1
+pillow==10.0.1
 requests~=2.32.3
 matplotlib~=3.8.2
