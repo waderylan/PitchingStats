@@ -149,6 +149,7 @@ class PitchingStats:
         whiff_percentage = (total_swing_and_misses / total_swings) * 100 if total_swings > 0 else 0
         batting_avg = (total_hits / (total_at_bats - total_walks - total_hbp)) if total_at_bats > 0 else 0
         babip = (total_hits / total_balls_in_play) if total_balls_in_play > 0 else 0
+        on_base_percentage = ((total_hits + total_walks + total_hbp)/ total_at_bats) if total_at_bats > 0 else 0
 
         # Store values in ordered dictionary
         self.stats.update(OrderedDict([
@@ -158,6 +159,7 @@ class PitchingStats:
             ("BB", total_walks),
             ("HBP", total_hbp),
             ("H", total_hits),
+            ("OBP", round(on_base_percentage,3)),
             ("Batting Average", round(batting_avg,3)),
             ("BABIP", round(babip, 3)),
             ("% Strikes", round(strike_percentage, 2)),
