@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPI Pitching Stats</title>
+    <style>
+                /* Global Layout */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1600px;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        /* Left Column: Instructions */
+        .left-column {
+            flex: 1;
+            max-width: 500px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        /* Middle Column: Input & Buttons */
+        .middle-column {
+            flex: 1;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #f9f9f9;  /* Match right/left columns */
+            border: 1px solid #ddd;  /* Add border like other columns */
+            padding: 15px;  /* Add padding for spacing */
+        }
+
+        input, button {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #e0e0e0;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #d0d0d0;
+        }
+
+        /* Right Column: JSON Output */
+        .right-column {
+            flex: 1;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: stretch;
+            height: 100%;
+        }
+
+        /* JSON Output Box (Scrollable) */
+        #jsonOutputContainer {
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 400px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background: #fff;
+            white-space: pre-wrap;
+        }
+
+        /* Ensure buttons stay below JSON Output */
+        #jsonControls {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Responsive: Stack Columns for Smaller Screens */
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .left-column, .middle-column, .right-column {
+                max-width: 100%;
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Left Column: Instructions -->
+        <div class="left-column">
+            <h3>Instructions</h3>
+            <p><strong>Pitch Types:</strong> Select the type of pitch thrown from the following:</p>
+            <ul>
+                <li><strong>1</strong> - Fastball</li>
+                <li><strong>2</strong> - Curveball</li>
+                <li><strong>3</strong> - Slider</li>
+                <li><strong>4</strong> - Changeup</li>
+            </ul>
+            <p>Enter pitch types as a comma-separated list. Example: <code>1,2,3,1</code></p>
+
+            <p><strong>Pitch Outcomes:</strong> Select the outcome of each pitch:</p>
+            <ul>
+                <li><strong>S</strong> - Swinging Strike</li>
+                <li><strong>K</strong> - Looking Strike</li>
+                <li><strong>B</strong> - Ball</li>
+                <li><strong>F</strong> - Foul</li>
+                <li><strong>P</strong> - In Play</li>
+            </ul>
+            <p>Enter pitch outcomes as a comma-separated list. Example: <code>S,B,F,K</code></p>
+
+            <p><strong>At-Bat Result:</strong> Select the final outcome of the at-bat from the following:</p>
+            <ul>
+                <li><strong>K</strong> - Strikeout</li>
+                <li><strong>BB</strong> - Walk</li>
+                <li><strong>HBP</strong> - Hit by Pitch</li>
+                <li><strong>1B</strong> - Single</li>
+                <li><strong>2B</strong> - Double</li>
+                <li><strong>3B</strong> - Triple</li>
+                <li><strong>HR</strong> - Home Run</li>
+                <li><strong>FO</strong> - Fly Out</li>
+                <li><strong>GO</strong> - Ground Out</li>
+                <li><strong>LO</strong> - Line Out</li>
+
+            </ul>
+            <p>Enter the at-bat result as a single value. Example: <code>1B</code></p>
+
+            <h4>Instructions:</h4>
+            <ul>
+                <li>Enter pitch types, pitch outcomes, and at-bat result.</li>
+                <li>Click <strong>"Add At-Bat"</strong> to save the entry.</li>
+                <li>Repeat for additional at-bats.</li>
+                <li>Click Run Analytics to calculate statistics.</li>
+
+            </ul>
+
+            <h4>Managing Data:</h4>
+            <ul>
+                <li>To load previous data, click <strong>"Choose File"</strong> and select an existing JSON file.</li>
+                <li>To save your data, click <strong>"Download JSON"</strong> after entering data.</li>
+            </ul>
+        </div>
+
+        <!-- Middle Column: Input & Buttons -->
+        <div class="middle-column">
+            <h3>Enter At-Bat Data</h3>
+
+            <label for="pitchTypes">Pitch Types (comma-separated: 1,2,3,4)</label>
+            <input type="text" id="pitchTypes" placeholder="e.g., 1,2,3,1">
+
+            <label for="pitchOutcomes">Pitch Outcomes (comma-separated: S,K,B,F,P)</label>
+            <input type="text" id="pitchOutcomes" placeholder="e.g., S,B,F">
+
+            <label for="atBatOutcome">At-Bat Result</label>
+            <input type="text" id="atBatOutcome" placeholder="e.g., 1B">
+
+            <button onclick="addAtBat()">Add At-Bat</button>
+            <button onclick="runPythonProgram()">Run Analytics</button>
+
+            <pre id="pythonOutput"></pre>
+
+        </div>
+
+        <!-- Right Column: JSON Output & Upload/Download -->
+        <div class="right-column">
+            <h3>Current At-Bats</h3>
+
+            <!-- JSON Output Display -->
+            <div id="jsonOutputContainer">
+                <pre id="jsonOutput"></pre>
+            </div>
+
+            <div id="jsonControls">
+                <label for="jsonUpload">Upload Existing JSON:</label>
+                <input type="file" id="jsonUpload" accept=".json" onchange="loadJSON(event)">
+                <button onclick="downloadJSON()">Download JSON</button>
+                <button onclick="clearJSON()">Clear At-Bats</button>
+            </div>
+
+            <!-- Remove At-Bat by ID -->
+            <div id="removeAtBatContainer">
+                <h4>Remove At-Bat</h4>
+                <label for="removeAtBatId">Enter At-Bat ID:</label>
+                <input type="number" id="removeAtBatId" placeholder="e.g., 1">
+                <button onclick="removeAtBat()">Remove</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        let atBats = { "at_bats": {} };
+        let atBatId = 1;
+
+        function toggleHelp() {
+            let helpSection = document.getElementById("helpSection");
+            helpSection.style.display = (helpSection.style.display === "none" || helpSection.style.display === "") ? "block" : "none";
+        }
+
+        function addAtBat() {
+            let pitchTypes = document.getElementById("pitchTypes").value.split(",").map(x => x.trim());
+            let pitchOutcomes = document.getElementById("pitchOutcomes").value.split(",").map(x => x.trim().toUpperCase());
+            let atBatOutcome = document.getElementById("atBatOutcome").value.trim().toUpperCase();
+
+            const validPitchTypes = ["1", "2", "3", "4"];
+            const validPitchOutcomes = ["S", "K", "B", "F", "P"];
+            const validAtBatResults = ["K", "BB", "HBP", "1B", "2B", "3B", "HR", "FO", "GO", "LO"];
+
+            if (!pitchTypes.every(pt => validPitchTypes.includes(pt))) {
+                alert("Invalid pitch types! Use 1, 2, 3, or 4.");
+                return;
+            }
+            if (!pitchOutcomes.every(po => validPitchOutcomes.includes(po))) {
+                alert("Invalid pitch outcomes! Use S, K, B, F, P.");
+                return;
+            }
+            if (!validAtBatResults.includes(atBatOutcome)) {
+                alert("Invalid at-bat outcome! Use K, BB, HBP, 1B, 2B, 3B, HR, FO, GO, LO.");
+                return;
+            }
+            if (pitchTypes.length !== pitchOutcomes.length) {
+                alert("Pitch types and outcomes must have the same number of values.");
+                return;
+            }
+
+            pitchTypes = pitchTypes.map(Number);
+            atBats["at_bats"][atBatId] = {
+                "pitch_types": pitchTypes,
+                "pitch_outcomes": pitchOutcomes,
+                "at_bat_outcome": atBatOutcome
+            };
+
+            atBatId++;
+
+            document.getElementById("jsonOutput").textContent = JSON.stringify(atBats, null, 4);
+            document.getElementById("pitchTypes").value = "";
+            document.getElementById("pitchOutcomes").value = "";
+            document.getElementById("atBatOutcome").value = "";
+        }
+
+        function downloadJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(atBats, null, 4));
+            const downloadAnchor = document.createElement("a");
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "game_data.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            document.body.removeChild(downloadAnchor);
+        }
+
+        function loadJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsedData = JSON.parse(e.target.result);
+                    if (parsedData.at_bats && typeof parsedData.at_bats === "object") {
+                        atBats = parsedData;
+                        atBatId = Object.keys(atBats["at_bats"]).length + 1;
+                        document.getElementById("jsonOutput").textContent = JSON.stringify(atBats, null, 4);
+                        alert("JSON file loaded successfully!");
+                    } else {
+                        alert("Invalid JSON format.");
+                    }
+                } catch (error) {
+                    alert("Error parsing JSON file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearJSON() {
+            atBats = { "at_bats": {} };  // Reset data
+            atBatId = 1;  // Reset at-bat ID counter
+            document.getElementById("jsonOutput").textContent = JSON.stringify(atBats, null, 4);  // Update display
+        }
+
+        function removeAtBat() {
+            let id = document.getElementById("removeAtBatId").value.trim();  // Get user input
+            if (!id || !atBats.at_bats[id]) {
+                alert("Invalid At-Bat ID!"); // If the ID is missing or does not exist
+                return;
+            }
+            delete atBats.at_bats[id]; // Remove the specific at-bat
+            document.getElementById("jsonOutput").textContent = JSON.stringify(atBats, null, 4); // Update display
+            document.getElementById("removeAtBatId").value = ""; // Clear input field
+        }
+
+
+        function runPythonProgram() {
+            fetch('http://127.0.0.1:5000/compute-stats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(atBats)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Server response was not OK");
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Python Stats Response:", data);
+                document.getElementById("pythonOutput").textContent = JSON.stringify(data, null, 4);
+            })
+            .catch(error => {
+                console.error("Fetch Error:", error);
+                document.getElementById("pythonOutput").textContent = "Error: " + error.message;
+            });
+        }
+
+    </script>
+
+</body>
+</html>
