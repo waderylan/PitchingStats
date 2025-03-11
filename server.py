@@ -147,7 +147,7 @@ class PitchingStats:
         first_pitch_fastball_percentage = (total_first_pitch_fastballs / total_at_bats) * 100 if total_at_bats > 0 else 0
         first_pitch_fastball_strike_percentage = (total_first_pitch_fastball_strikes / total_first_pitch_fastballs) * 100 if total_first_pitch_fastballs > 0 else 0
         whiff_percentage = (total_swing_and_misses / total_swings) * 100 if total_swings > 0 else 0
-        batting_avg = (total_hits / total_at_bats) if total_at_bats > 0 else 0
+        batting_avg = (total_hits / (total_at_bats - total_walks - total_hbp)) if total_at_bats > 0 else 0
         babip = (total_hits / total_balls_in_play) if total_balls_in_play > 0 else 0
 
         # Store values in ordered dictionary
