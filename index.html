@@ -102,6 +102,52 @@
             }
         }
 
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 22px;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+
+
 
     </style>
 </head>
@@ -163,6 +209,15 @@
                 <li>To remove one at-bat, enter the at-bat number and click<strong>"Remove"</strong>.</li>
 
             </ul>
+
+            <h4>Uploading and Merging Data:</h4>
+            <ul>
+                <li>Before uploading a file, select a mode using the toggle switch:</li>
+                <ul>
+                    <li><strong>Overwrite Mode:</strong> Replaces all existing data with the uploaded file.</li>
+                    <li><strong>Append Mode:</strong> Merges the new file’s data with the existing at-bats.</li>
+                </ul>
+            </ul>
         </div>
 
         <!-- Middle Column: Input & Buttons -->
@@ -195,10 +250,33 @@
             </div>
 
             <div id="jsonControls">
-                <label for="jsonUpload">Upload Existing JSON:</label>
-                <input type="file" id="jsonUpload" accept=".json" onchange="loadJSON(event)">
+                <!-- Upload JSON File -->
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div>
+                        <label for="jsonUpload">Upload Existing JSON:</label>
+                        <input type="file" id="jsonUpload" accept=".json" onchange="loadJSON(event)">
+                    </div>
+
+                    <!-- Toggle for Overwrite vs Append -->
+                    <div>
+                        <label><strong>Mode:</strong></label>
+                        <label class="switch">
+                            <input type="checkbox" id="appendToggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="toggleLabel">Overwrite</span> <!-- Updates dynamically -->
+                    </div>
+                </div>
+
+                <!-- Buttons -->
                 <button onclick="downloadJSON()">Download JSON</button>
                 <button onclick="clearJSON()">Clear At-Bats</button>
+            </div>
+
+            <!-- Appended Files List -->
+            <div id="appendedFilesContainer" style="display: none; margin-top: 15px;">
+                <h4>Appended Files</h4>
+                <ul id="appendedFilesList"></ul>
             </div>
 
             <!-- Remove At-Bat by ID -->
@@ -209,6 +287,7 @@
                 <button onclick="removeAtBat()">Remove</button>
             </div>
         </div>
+
     </div>
 
 
@@ -272,7 +351,23 @@
             document.body.removeChild(downloadAnchor);
         }
 
+        let appendedFiles = [];  // Track appended files
+        let lastOverwrittenFile = null;  // Store the most recent overwritten file
+
+        document.getElementById("appendToggle").addEventListener("change", function() {
+            document.getElementById("toggleLabel").textContent = this.checked ? "Append" : "Overwrite";
+
+            if (this.checked && lastOverwrittenFile) {
+                // User switched to Append mode; add last overwritten file to the list
+                if (!appendedFiles.includes(lastOverwrittenFile)) {
+                    appendedFiles.unshift(lastOverwrittenFile);  // Add it as the first entry
+                    updateAppendedFilesList();
+                }
+            }
+        });
+
         function loadJSON(event) {
+            const fileInput = document.getElementById("jsonUpload");
             const file = event.target.files[0];
             if (!file) return;
 
@@ -280,26 +375,80 @@
             reader.onload = function(e) {
                 try {
                     const parsedData = JSON.parse(e.target.result);
-                    if (parsedData.at_bats && typeof parsedData.at_bats === "object") {
-                        atBats = parsedData;
-                        atBatId = Object.keys(atBats["at_bats"]).length + 1;
-                        document.getElementById("jsonOutput").textContent = JSON.stringify(atBats, null, 4);
-                        alert("JSON file loaded successfully!");
-                    } else {
+
+                    // Check if the JSON is valid
+                    if (!parsedData.at_bats || typeof parsedData.at_bats !== "object") {
                         alert("Invalid JSON format.");
+                        return;
                     }
+
+                    const appendMode = document.getElementById("appendToggle").checked;
+
+                    if (appendMode) {
+                        // Append Mode: Ensure unique at-bat IDs
+                        for (let [id, atBat] of Object.entries(parsedData.at_bats)) {
+                            if (atBats.at_bats[id]) {
+                                // Find the next available ID
+                                let newId = id;
+                                while (atBats.at_bats[newId]) {
+                                    newId = String(parseInt(newId) + 1);
+                                }
+                                atBats.at_bats[newId] = atBat;
+                            } else {
+                                atBats.at_bats[id] = atBat;
+                            }
+                        }
+
+                        //Allow duplicate filenames in the appended files list
+                        appendedFiles.push(file.name);
+                        updateAppendedFilesList();
+                    } else {
+                        // Overwrite Mode: Replace the entire dataset
+                        atBats = parsedData;
+                        appendedFiles = []; // Clear appended file history
+                        lastOverwrittenFile = file.name; // Store the overwritten file
+                        document.getElementById("appendedFilesContainer").style.display = "none";
+                    }
+
+                    // Update display
+                    atBatId = Math.max(...Object.keys(atBats.at_bats).map(Number)) + 1;
+                    document.getElementById("jsonOutput").textContent = JSON.stringify(atBats, null, 4);
+                    alert(`JSON file "${file.name}" ${appendMode ? "appended" : "overwritten"} successfully!`);
+
                 } catch (error) {
                     alert("Error parsing JSON file.");
                 }
+
+                // **Reset file input to allow re-upload of the same file**
+                fileInput.value = "";
             };
+
             reader.readAsText(file);
+        }
+
+
+        function updateAppendedFilesList() {
+            const container = document.getElementById("appendedFilesContainer");
+            const list = document.getElementById("appendedFilesList");
+
+            if (appendedFiles.length > 0) {
+                container.style.display = "block";
+                list.innerHTML = appendedFiles.map(name => `<li>${name}</li>`).join("");
+            } else {
+                container.style.display = "none";
+            }
         }
 
         function clearJSON() {
             atBats = { "at_bats": {} };  // Reset data
             atBatId = 1;  // Reset at-bat ID counter
-            document.getElementById("jsonOutput").textContent = JSON.stringify(atBats, null, 4);  // Update display
+            appendedFiles = [];  // Clear appended file history
+            lastOverwrittenFile = null;  // Reset last overwritten file
+            document.getElementById("jsonOutput").textContent = JSON.stringify(atBats, null, 4);
+            updateAppendedFilesList();  // Hide appended file list
         }
+
+
 
         function removeAtBat() {
             let id = document.getElementById("removeAtBatId").value.trim();  // Get user input
