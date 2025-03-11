@@ -236,6 +236,8 @@
             <button onclick="addAtBat()">Add At-Bat</button>
             <button onclick="runPythonProgram()">Run Analytics</button>
 
+            <button onclick="generateGameChart()">Generate Game Chart</button>
+
             <pre id="pythonOutput"></pre>
 
         </div>
@@ -448,8 +450,6 @@
             updateAppendedFilesList();  // Hide appended file list
         }
 
-
-
         function removeAtBat() {
             let id = document.getElementById("removeAtBatId").value.trim();  // Get user input
             if (!id || !atBats.at_bats[id]) {
@@ -460,7 +460,6 @@
             document.getElementById("jsonOutput").textContent = JSON.stringify(atBats, null, 4); // Update display
             document.getElementById("removeAtBatId").value = ""; // Clear input field
         }
-
 
         function runPythonProgram() {
             fetch('https://pitchingstats-production.up.railway.app/compute-stats', {
@@ -475,6 +474,30 @@
             .catch(error => {
                 document.getElementById("pythonOutput").textContent = "Error: " + error.message;
             });
+        }
+
+        function generateGameChart() {
+            fetch('http://127.0.0.1:5000/generate-game-chart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(atBats) // Replace with your JSON object
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to generate PDF');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'game_chart.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => alert('Error: ' + error.message));
         }
 
 
