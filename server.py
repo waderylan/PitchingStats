@@ -324,7 +324,7 @@ def generate_game_chart_route():
         game_data = request.json
         output_pdf_path = "game_chart.pdf"
         generate_game_chart(game_data, output_pdf_path)
-        return send_file(output_pdf_path, as_attachment=True, mimetype="application/pdf")
+        return send_file(output_pdf_path, mimetype="application/pdf")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
