@@ -316,6 +316,7 @@ def generate_game_chart(game_data, output_pdf_path):
     img.convert("RGB").save(output_pdf_path)
     return output_pdf_path
 
+
 @app.route("/generate-game-chart", methods=["POST"])
 def generate_game_chart_route():
     """Endpoint to generate a game chart and return as a PDF."""
@@ -326,6 +327,7 @@ def generate_game_chart_route():
         return send_file(output_pdf_path, as_attachment=True, mimetype="application/pdf")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/compute-stats', methods=['POST'])
 def compute_stats():

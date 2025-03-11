@@ -480,25 +480,29 @@
             fetch('https://pitchingstats-production.up.railway.app/generate-game-chart', {
                 method: 'POST',
                 headers: {
+                    'Accept': 'application/pdf',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(atBats) // Replace with your JSON object
+                body: JSON.stringify(atBats) // Ensure atBats is correctly formatted
             })
             .then(response => {
-                if (!response.ok) throw new Error('Failed to generate PDF');
+                if (!response.ok) throw new Error(`Failed to generate PDF. Status: ${response.status}`);
                 return response.blob();
             })
             .then(blob => {
                 const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'game_chart.pdf';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
+
+                // Open the PDF in a new tab instead of downloading
+                window.open(url, '_blank');
+
+                // Optionally, revoke the URL after some time to free memory
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                }, 10000); // 10 seconds later
             })
             .catch(error => alert('Error: ' + error.message));
         }
+
 
 
     </script>
