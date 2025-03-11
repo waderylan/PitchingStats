@@ -128,7 +128,7 @@
                 <li><strong>F</strong> - Foul</li>
                 <li><strong>P</strong> - In Play</li>
             </ul>
-            <p>Enter pitch outcomes as a comma-separated list. Example: <code>S,B,F,K</code></p>
+            <p>Enter pitch outcomes as a comma-separated list. Example: <code>S,B,F,P</code></p>
 
             <p><strong>At-Bat Result:</strong> Select the final outcome of the at-bat from the following:</p>
             <ul>
@@ -170,9 +170,9 @@
             <input type="text" id="pitchTypes" placeholder="e.g., 1,2,3,1">
 
             <label for="pitchOutcomes">Pitch Outcomes (comma-separated: S,K,B,F,P)</label>
-            <input type="text" id="pitchOutcomes" placeholder="e.g., S,B,F">
+            <input type="text" id="pitchOutcomes" placeholder="e.g., S,B,F,P">
 
-            <label for="atBatOutcome">At-Bat Result</label>
+            <label for="atBatOutcome">At-Bat Result (single value: K,BB,HBP,1B,2B,3B,HR,FO,GO,LO)</label>
             <input type="text" id="atBatOutcome" placeholder="e.g., 1B">
 
             <button onclick="addAtBat()">Add At-Bat</button>
