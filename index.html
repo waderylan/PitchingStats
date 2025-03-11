@@ -311,26 +311,20 @@
 
 
         function runPythonProgram() {
-            fetch('http://127.0.0.1:5000/compute-stats', {
+            fetch('https://pitchingstats-production.up.railway.app/compute-stats', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(atBats)
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Server response was not OK");
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log("Python Stats Response:", data);
                 document.getElementById("pythonOutput").textContent = JSON.stringify(data, null, 4);
             })
             .catch(error => {
-                console.error("Fetch Error:", error);
                 document.getElementById("pythonOutput").textContent = "Error: " + error.message;
             });
         }
+
 
     </script>
 

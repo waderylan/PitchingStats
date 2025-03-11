@@ -2,6 +2,7 @@ import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from collections import defaultdict, OrderedDict
+import os
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend access
@@ -193,6 +194,10 @@ def compute_stats():
         print("Error processing stats:", str(e))
         return jsonify({"error": str(e)}), 500
 
+@app.route("/")
+def home():
+    return "Flask app is running!"
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Get PORT from Railway
+    app.run(host="0.0.0.0", port=port, debug=True)
