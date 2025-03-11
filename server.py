@@ -124,7 +124,7 @@ class PitchingStats:
             if current_adv_count:
                 if result not in ("1B", "2B", "3B", "HR", "BB", "HBP"):  # Batter got out
                     adv_won_out += 1
-                if result in ("KL", "KS"):  # Strikeout
+                if result == "K":  # Strikeout
                     adv_won_k += 1
                 current_adv_count = False
 
@@ -184,7 +184,6 @@ def compute_stats():
         # Convert OrderedDict to JSON
         response = json.dumps(stats_tracker.stats, indent=4)
 
-        # ✅ Debug: Print the response in terminal
         print("Returning JSON Response:")
         print(response)
 
