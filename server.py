@@ -1,5 +1,5 @@
 import json
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from collections import defaultdict, OrderedDict
 import os
@@ -324,7 +324,14 @@ def generate_game_chart_route():
         game_data = request.json
         output_pdf_path = "game_chart.pdf"
         generate_game_chart(game_data, output_pdf_path)
-        return send_file(output_pdf_path, mimetype="application/pdf")
+
+        with open(output_pdf_path, "rb") as f:
+            pdf_data = f.read()
+
+        response = Response(pdf_data, mimetype="application/pdf")
+        response.headers["Content-Disposition"] = "inline; filename=game_chart.pdf"
+        return response
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
