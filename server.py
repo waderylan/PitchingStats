@@ -306,12 +306,12 @@ def make_game_chart_pdf(game_data):
         # Draw text next to it
         draw.text((key_x + 20, y_pos), f"{symbol}: {desc}", fill="black", font=font)
 
-        # Convert the image to PDF
-        pdf_stream = io.BytesIO()
-        img.convert("RGB").save(pdf_stream, format="PDF")
-        pdf_stream.seek(0)  # Reset stream position
+    # Convert the image to PDF
+    pdf_stream = io.BytesIO()
+    img.convert("RGB").save(pdf_stream, format="PDF")
+    pdf_stream.seek(0)  # Reset stream position
 
-        return pdf_stream  # Return in-memory PDF
+    return pdf_stream  # Return in-memory PDF
 
 
 @app.route("/generate-game-chart", methods=["POST"])
