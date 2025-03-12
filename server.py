@@ -202,7 +202,7 @@ def make_game_chart_pdf(game_data):
     img = Image.new("RGB", (img_width, img_height), "white")
     draw = ImageDraw.Draw(img)
 
-    font = ImageFont.truetype("./fonts/arial.ttf", 16)
+    font = ImageFont.truetype("./fonts/Arial.ttf", 16)
 
     # Function to draw at-bats
     def draw_at_bat(draw, x, y, at_bat):
