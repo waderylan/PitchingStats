@@ -483,7 +483,7 @@
                     'Accept': 'application/pdf',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(atBats) // Ensure atBats is correctly formatted
+                body: JSON.stringify(atBats)
             })
             .then(response => {
                 if (!response.ok) throw new Error(`Failed to generate PDF. Status: ${response.status}`);
@@ -491,20 +491,10 @@
             })
             .then(blob => {
                 const url = window.URL.createObjectURL(blob);
-
-                // Open the PDF in a new tab instead of downloading
-                window.open(url, '_blank');
-
-                // Optionally, revoke the URL after some time to free memory
-                setTimeout(() => {
-                    window.URL.revokeObjectURL(url);
-                }, 10000); // 10 seconds later
+                window.open(url, '_blank'); // Open the PDF directly in a new tab
             })
             .catch(error => alert('Error: ' + error.message));
         }
-
-
-
     </script>
 
 </body>
