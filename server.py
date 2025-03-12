@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from collections import defaultdict, OrderedDict
 import os
+import io
 from PIL import Image, ImageDraw, ImageFont
 
 app = Flask(__name__)
@@ -187,7 +188,7 @@ class PitchingStats:
         ]))
 
 
-def generate_game_chart(game_data, output_pdf_path):
+def make_game_chart_pdf(game_data):
     """Generates a game chart from JSON and saves it as a PDF."""
 
     # Constants for grid layout
@@ -312,28 +313,27 @@ def generate_game_chart(game_data, output_pdf_path):
         # Draw text next to it
         draw.text((key_x + 20, y_pos), f"{symbol}: {desc}", fill="black", font=font)
 
-    # Save as PDF
-    img.convert("RGB").save(output_pdf_path)
-    return output_pdf_path
+        # Convert the image to PDF
+        pdf_stream = io.BytesIO()
+        img.convert("RGB").save(pdf_stream, format="PDF")
+        pdf_stream.seek(0)  # Reset stream position
+
+        return pdf_stream  # Return in-memory PDF
 
 
 @app.route("/generate-game-chart", methods=["POST"])
-def generate_game_chart_route():
-    """Endpoint to generate a game chart and return as a PDF."""
+def generate_game_chart():
+    """Endpoint to generate a game chart and return it as a PDF stream."""
     try:
         game_data = request.json
-        output_pdf_path = "game_chart.pdf"
-        generate_game_chart(game_data, output_pdf_path)
+        pdf_stream = make_game_chart_pdf(game_data)
 
-        with open(output_pdf_path, "rb") as f:
-            pdf_data = f.read()
-
-        response = Response(pdf_data, mimetype="application/pdf")
-        response.headers["Content-Disposition"] = "inline; filename=game_chart.pdf"
-        return response
-
+        return Response(pdf_stream, mimetype="application/pdf", headers={
+            "Content-Disposition": "inline; filename=game_chart.pdf"
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 @app.route('/compute-stats', methods=['POST'])
