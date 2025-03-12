@@ -262,10 +262,7 @@ def make_game_chart_pdf(game_data):
                 draw.text((text_x, text_y), pitch_label, fill=text_color, font=font)
 
         # Load a larger font for the at-bat result
-        try:
-            result_font = ImageFont.truetype("arial.ttf", 26)  # Increased font size
-        except IOError:
-            result_font = ImageFont.load_default()
+        result_font = ImageFont.truetype("./fonts/Arial.ttf", 32)
 
         # Draw the at-bat result in the center of the cell
         result = at_bat.get("at_bat_outcome", "")
