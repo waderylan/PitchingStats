@@ -63,7 +63,7 @@ class PitchingStats:
                 total_walks += 1
             if result == "HBP":
                 total_hbp += 1
-            if result in ("1B", "2B", "3B", "HR"):  # Hit types
+            if result.startswith(("1B", "2B", "3B", "HR")):  # Hit types
                 total_hits += 1
                 if pitches[-1] == 1:
                     hits_on_fb += 1
@@ -129,7 +129,7 @@ class PitchingStats:
 
                 # Check the result of the at-bat during an advantage count
             if current_adv_count:
-                if result not in ("1B", "2B", "3B", "HR", "BB", "HBP"):  # Batter got out
+                if result == "K" or result.startswith(("F", "G", "L")):
                     adv_won_out += 1
                 if result == "K":  # Strikeout
                     adv_won_k += 1
@@ -268,6 +268,10 @@ def make_game_chart_pdf(game_data):
         result = at_bat.get("at_bat_outcome", "")
         result_x = x + cell_width // 2 - 15  # Adjust for better centering
         result_y = y + cell_height // 2 - 10  # Move slightly higher
+
+        if result.startswith(("1B", "2B", "3B", "HR")):
+            result = result[:2] + "-" + result[2]
+
         draw.text((result_x, result_y), result, fill="black", font=result_font)
 
     # Place at-bats into the 5x9 grid (COLUMN-WISE FILL)

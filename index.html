@@ -181,10 +181,10 @@
                 <li><strong>K</strong> - Strikeout</li>
                 <li><strong>BB</strong> - Walk</li>
                 <li><strong>HBP</strong> - Hit by Pitch</li>
-                <li><strong>1B</strong> - Single</li>
-                <li><strong>2B</strong> - Double</li>
-                <li><strong>3B</strong> - Triple</li>
-                <li><strong>HR</strong> - Home Run</li>
+                <li><strong>1B</strong> - Single (Optionally specify position, e.g., <code>1B6</code>)</li>
+                <li><strong>2B</strong> - Double (Optionally specify position, e.g., <code>2B8</code>)</li>
+                <li><strong>3B</strong> - Triple (Optionally specify position, e.g., <code>3B9</code>)</li>
+                <li><strong>HR</strong> - Home Run (Optionally specify position, e.g., <code>HR7</code>)</li>
                 <li><strong>F</strong><em>(#)</em> - Fly Out (Position number, e.g., <code>F7</code>)</li>
                 <li><strong>G</strong><em>(#)</em> - Ground Out (Position number, e.g., <code>G4</code>)</li>
                 <li><strong>L</strong><em>(#)</em> - Line Out (Position number, e.g., <code>L6</code>)</li>
@@ -314,7 +314,8 @@
             // Function to check if an at-bat result is valid
             function isValidAtBatResult(result) {
                 if (validAtBatResults.includes(result)) return true;
-                if (/^(F|G|L)\d$/.test(result)) return true; // FO, GO, LO followed by a single digit (position)
+                if (/^(1B|2B|3B|HR)\d?$/.test(result)) return true; // Hit with optional position (e.g., "1B4")
+                if (/^(F|G|L)\d$/.test(result)) return true; // Fly/Ground/Line Out with position
                 return false;
             }
 
@@ -327,7 +328,8 @@
                 return;
             }
             if (!isValidAtBatResult(atBatOutcome)) {
-                alert("Invalid at-bat outcome! Use K, BB, HBP, 1B, 2B, 3B, HR, or F/G/L followed by a position number (e.g., F7, G4, L6).");
+                alert("Invalid at-bat outcome! Use K, BB, HBP, 1B, 2B, 3B, HR, or F/G/L followed by a position number (e.g., F7, G4, L6)." +
+                    "\nOptionally use 1B/2B/3B/HR followed by a position number.");
                 return;
             }
             if (pitchTypes.length !== pitchOutcomes.length) {
