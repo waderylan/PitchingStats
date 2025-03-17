@@ -270,7 +270,8 @@ def make_game_chart_pdf(game_data):
         result_y = y + cell_height // 2 - 10  # Move slightly higher
 
         if result.startswith(("1B", "2B", "3B", "HR")):
-            result = result[:2] + "-" + result[2]
+            if len(result) > 2:
+                result = result[:2] + "-" + result[2]
 
         draw.text((result_x, result_y), result, fill="black", font=result_font)
 
