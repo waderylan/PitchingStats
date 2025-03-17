@@ -185,9 +185,9 @@
                 <li><strong>2B</strong> - Double</li>
                 <li><strong>3B</strong> - Triple</li>
                 <li><strong>HR</strong> - Home Run</li>
-                <li><strong>FO</strong> - Fly Out</li>
-                <li><strong>GO</strong> - Ground Out</li>
-                <li><strong>LO</strong> - Line Out</li>
+                <li><strong>F</strong><em>(#)</em> - Fly Out (Position number, e.g., <code>F7</code>)</li>
+                <li><strong>G</strong><em>(#)</em> - Ground Out (Position number, e.g., <code>G4</code>)</li>
+                <li><strong>L</strong><em>(#)</em> - Line Out (Position number, e.g., <code>L6</code>)</li>
 
             </ul>
             <p>Enter the at-bat result as a single value. Example: <code>1B</code></p>
@@ -230,7 +230,7 @@
             <label for="pitchOutcomes">Pitch Outcomes (comma-separated: S,K,B,F,P)</label>
             <input type="text" id="pitchOutcomes" placeholder="e.g., S,B,F,P">
 
-            <label for="atBatOutcome">At-Bat Result (single value: K,BB,HBP,1B,2B,3B,HR,FO,GO,LO)</label>
+            <label for="atBatOutcome">At-Bat Result (single value: K,BB,HBP,1B,2B,3B,HR,F#,G#,L#)</label>
             <input type="text" id="atBatOutcome" placeholder="e.g., 1B">
 
             <button onclick="addAtBat()">Add At-Bat</button>
@@ -311,6 +311,13 @@
             const validPitchOutcomes = ["S", "K", "B", "F", "P"];
             const validAtBatResults = ["K", "BB", "HBP", "1B", "2B", "3B", "HR", "FO", "GO", "LO"];
 
+            // Function to check if an at-bat result is valid
+            function isValidAtBatResult(result) {
+                if (validAtBatResults.includes(result)) return true;
+                if (/^(F|G|L)\d$/.test(result)) return true; // FO, GO, LO followed by a single digit (position)
+                return false;
+            }
+
             if (!pitchTypes.every(pt => validPitchTypes.includes(pt))) {
                 alert("Invalid pitch types! Use 1, 2, 3, or 4.");
                 return;
@@ -319,8 +326,8 @@
                 alert("Invalid pitch outcomes! Use S, K, B, F, P.");
                 return;
             }
-            if (!validAtBatResults.includes(atBatOutcome)) {
-                alert("Invalid at-bat outcome! Use K, BB, HBP, 1B, 2B, 3B, HR, FO, GO, LO.");
+            if (!isValidAtBatResult(atBatOutcome)) {
+                alert("Invalid at-bat outcome! Use K, BB, HBP, 1B, 2B, 3B, HR, or F/G/L followed by a position number (e.g., F7, G4, L6).");
                 return;
             }
             if (pitchTypes.length !== pitchOutcomes.length) {

@@ -79,7 +79,7 @@ class PitchingStats:
             if outcomes[0] != "B" and pitches[0] == 1:
                 total_first_pitch_fastball_strikes += 1
 
-            if result in ("1B", "2B", "3B", "HR", "GO", "FO", "LO"):
+            if result.startswith(("1B", "2B", "3B", "HR")) or result[:2] in ("FO", "GO", "LO"):
                 total_balls_in_play += 1
 
             balls = 0
@@ -107,8 +107,8 @@ class PitchingStats:
                 if outcomes[i] == "B":
                     balls += 1
                 else:
-                    strikes += 1  # Everything else is a non-ball (strike, foul, in-play)
-                    total_strikes += 1  # New: Count total strikes
+                    strikes += 1
+                    total_strikes += 1
 
                 if outcomes[i] in ("S", "F", "P"):
                     total_swings += 1
@@ -149,9 +149,9 @@ class PitchingStats:
         first_pitch_fastball_percentage = (total_first_pitch_fastballs / total_at_bats) * 100 if total_at_bats > 0 else 0
         first_pitch_fastball_strike_percentage = (total_first_pitch_fastball_strikes / total_first_pitch_fastballs) * 100 if total_first_pitch_fastballs > 0 else 0
         whiff_percentage = (total_swing_and_misses / total_swings) * 100 if total_swings > 0 else 0
-        batting_avg = (total_hits / (total_at_bats - total_walks - total_hbp)) if total_at_bats > 0 else 0
+        batting_avg = (total_hits / (total_at_bats - total_walks - total_hbp)) if (total_at_bats - total_walks - total_hbp) > 0 else 0
         babip = (total_hits / total_balls_in_play) if total_balls_in_play > 0 else 0
-        on_base_percentage = ((total_hits + total_walks + total_hbp)/ total_at_bats) if total_at_bats > 0 else 0
+        on_base_percentage = ((total_hits + total_walks + total_hbp) / total_at_bats) if total_at_bats > 0 else 0
 
         # Store values in ordered dictionary
         self.stats.update(OrderedDict([
