@@ -5,6 +5,8 @@ This project is a **Baseball Pitching Stats Tracker**, designed to log and analy
 ## Website Link
 - You can access the Pitching Stats Tracker here: https://rpipitchstats.netlify.app/
 
+- **Note**: The backend is currently offline as the Railway free trial has ended.
+
 ## Features
 - **Track Pitch Data**: Records pitch types, outcomes, and at-bat results.
 - **Analyze Performance**: Computes advanced pitching statistics instantly.
